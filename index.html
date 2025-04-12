@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Client</title>
+</head>
+<body>
+    <input type="text" id="messageInput" placeholder="Type your message">
+    <button id="sendButton">Send</button>
+    <div id="responseArea"></div>
+
+    <script>
+        const websocket = new WebSocket('ws://127.0.0.1:8000/ws/chat');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const responseArea = document.getElementById('responseArea');
+
+        websocket.onopen = () => {
+            console.log('WebSocket connection established.');
+        };
+
+        websocket.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            const formattedMessage = JSON.stringify(message, null, 2);
+            responseArea.innerHTML += `<pre>${formattedMessage}</pre>`;
+        };
+
+        websocket.onclose = () => {
+            console.log('WebSocket connection closed.');
+        };
+
+        websocket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+
+        sendButton.addEventListener('click', () => {
+            const message = messageInput.value;
+            websocket.send(JSON.stringify({ type: "chat", content: message }));
+            messageInput.value = '';
+        });
+    </script>
+</body>
+</html>

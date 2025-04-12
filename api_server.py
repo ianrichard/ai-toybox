@@ -45,22 +45,14 @@ async def websocket_chat(websocket: WebSocket):
                     user_input = message.get("content", "")
                     
                     # Define callbacks for websocket streaming
-                    def on_assistant_message(delta):
-                        asyncio.create_task(
-                            websocket.send_json({
-                                "type": "assistant_delta",
-                                "content": delta
-                            })
-                        )
-                    
                     def on_tool_call(tool_call):
                         asyncio.create_task(
                             websocket.send_json({
                                 "type": "tool_call",
-                                "content": tool_call
+                                "content": {"tool_name": tool_call["tool_name"], "args": tool_call["args"]}
                             })
                         )
-                    
+
                     def on_tool_result(result):
                         asyncio.create_task(
                             websocket.send_json({
@@ -68,6 +60,15 @@ async def websocket_chat(websocket: WebSocket):
                                 "content": result
                             })
                         )
+
+                    def on_assistant_message(content):
+                        asyncio.create_task(
+                            websocket.send_json({
+                                "type": "assistant",
+                                "content": content
+                            })
+                        )
+                    
                     
                     # Process the message and stream the response
                     response = await service.process_input(
@@ -78,7 +79,7 @@ async def websocket_chat(websocket: WebSocket):
                     )
                     
                     # Send completion message
-                    await websocket.send_json({"type": "complete", "content": response})
+                    await websocket.send_json({"type": "final_response", "content": response})
                     
     except WebSocketDisconnect:
         pass  # Client disconnected

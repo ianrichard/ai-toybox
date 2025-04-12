@@ -1,15 +1,20 @@
 import asyncio
 import sys
+import os
+from dotenv import load_dotenv
 from pydantic_ai import Agent
 from pydantic_ai.mcp import MCPServerStdio
 from typing import AsyncGenerator, Optional, Dict, Any, Callable, Union
 
+load_dotenv()  # Load environment variables from .env
+
 class AgentService:
     """Core service layer for agent interactions that can be used by multiple frontends."""
     
-    def __init__(self, model: str = "openai:gpt-4o-mini", system_prompt: str = "You are a helpful assistant."):
+    def __init__(self, system_prompt: str = "You are a helpful assistant."):
+        model_name = os.getenv("BASE_MODEL")
         self.agent = Agent(
-            model,
+            model_name,            
             mcp_servers=[MCPServerStdio(sys.executable, args=["mcp_server.py"])],
             system_prompt=system_prompt,
         )
