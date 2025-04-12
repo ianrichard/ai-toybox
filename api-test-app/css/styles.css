@@ -1,0 +1,61 @@
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+.message-appear {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.typing-indicator span {
+  animation: bounce 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+code {
+  border-radius: 4px;
+  padding: 2px 4px;
+  background: #f1f1f1;
+}
+
+pre {
+  background-color: #282c34;
+  color: #abb2bf;
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+}
