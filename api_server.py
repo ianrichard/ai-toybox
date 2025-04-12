@@ -4,8 +4,19 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import json
 from agent_service import AgentService
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 
 app = FastAPI(title="Pydantic AI API")
+
+# Mount static files directory if you have CSS/JS files
+# app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Add a route for the root path
+@app.get("/")
+async def read_root():
+    return FileResponse("index.html")
 
 class ChatRequest(BaseModel):
     message: str
@@ -15,19 +26,7 @@ class ChatResponse(BaseModel):
     tool_calls: list
     tool_results: list
 
-@app.post("/chat")
-async def chat(request: ChatRequest):
-    """Synchronous chat endpoint"""
-    async with AgentService() as service:
-        response = await service.process_input(request.message)
-        
-        return ChatResponse(
-            content=response["assistant_content"],
-            tool_calls=response["tool_calls"],
-            tool_results=response["tool_results"]
-        )
-
-@app.websocket("/ws/chat")
+@app.websocket("/chat")
 async def websocket_chat(websocket: WebSocket):
     """Stream chat responses through WebSocket"""
     await websocket.accept()

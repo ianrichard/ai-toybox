@@ -1,42 +1,150 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>WebSocket Client</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebSocket Endpoint Tester</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
 </head>
-<body>
-    <input type="text" id="messageInput" placeholder="Type your message">
-    <button id="sendButton">Send</button>
-    <div id="responseArea"></div>
+<body class="bg-gray-100 text-gray-900">
+  <div id="root" class="max-w-2xl mx-auto mt-10 px-4"></div>
 
-    <script>
-        const websocket = new WebSocket('ws://127.0.0.1:8000/ws/chat');
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
-        const responseArea = document.getElementById('responseArea');
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
 
-        websocket.onopen = () => {
-            console.log('WebSocket connection established.');
-        };
+    function useWebSocket(url, onMessage) {
+      const wsRef = useRef(null);
 
-        websocket.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-            const formattedMessage = JSON.stringify(message, null, 2);
-            responseArea.innerHTML += `<pre>${formattedMessage}</pre>`;
-        };
+      useEffect(() => {
+        const ws = new WebSocket(url);
+        wsRef.current = ws;
 
-        websocket.onclose = () => {
-            console.log('WebSocket connection closed.');
-        };
+        ws.onopen = () => console.log("Connected to WebSocket");
+        ws.onmessage = (e) => onMessage(JSON.parse(e.data));
+        ws.onerror = (err) => console.error("WebSocket error", err);
+        ws.onclose = () => console.log("WebSocket closed");
 
-        websocket.onerror = (error) => {
-            console.error('WebSocket error:', error);
-        };
+        return () => ws.close();
+      }, [url]);
 
-        sendButton.addEventListener('click', () => {
-            const message = messageInput.value;
-            websocket.send(JSON.stringify({ type: "chat", content: message }));
-            messageInput.value = '';
+      const sendMessage = (data) => {
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify(data));
+        }
+      };
+
+      return sendMessage;
+    }
+
+    function Message({ type, content }) {
+      const base = "px-4 py-2 rounded-lg shadow mb-2 whitespace-pre-wrap break-words";
+      const styleMap = {
+        'user': "bg-blue-100 text-right ml-auto",
+        'assistant': "bg-gray-100 text-left",
+        'tool-call': "bg-yellow-100 font-mono",
+        'tool-result': "bg-green-100 font-mono",
+        'error': "bg-red-100 text-red-700 font-semibold",
+      };
+      return (
+        <div className={`flex ${type === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div className={`${base} ${styleMap[type] || 'bg-white'}`}>
+            {typeof content === 'string' ? content : JSON.stringify(content, null, 2)}
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      const [input, setInput] = useState('');
+      const [messages, setMessages] = useState([]);
+      const [buffer, setBuffer] = useState('');
+
+      const send = useWebSocket('ws://localhost:8000/chat', (msg) => {
+        switch (msg.type) {
+          case 'assistant':
+            setBuffer(prev => {
+              const updated = prev + msg.content;
+              if (prev === '') {
+                addMessage('assistant', updated);
+              } else {
+                updateAssistant(updated);
+              }
+              return updated;
+            });
+            break;
+          case 'final_response':
+            setBuffer('');
+            break;
+          case 'tool_call':
+            addMessage('tool-call', msg.content);
+            break;
+          case 'tool_result':
+            addMessage('tool-result', msg.content);
+            break;
+          case 'error':
+            addMessage('error', msg.content);
+            break;
+        }
+      });
+
+      const addMessage = (type, content) => {
+        setMessages(prev => [...prev, { type, content }]);
+      };
+
+      const updateAssistant = (content) => {
+        setMessages(prev => {
+          const last = [...prev];
+          if (last.length && last[last.length - 1].type === 'assistant') {
+            last[last.length - 1] = { ...last[last.length - 1], content };
+          }
+          return last;
         });
-    </script>
+      };
+
+      const handleSend = () => {
+        const trimmed = input.trim();
+        if (!trimmed) return;
+        addMessage('user', trimmed);
+        send({ type: 'chat', content: trimmed });
+        setInput('');
+      };
+
+      return (
+        <div className="flex flex-col gap-4">
+          <h1 className="text-2xl font-bold mb-2">WebSocket Endpoint Tester</h1>
+          <div className="flex gap-2">
+            <input
+              className="flex-1 p-2 border rounded"
+              placeholder="Type your message"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            />
+            <button
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              onClick={handleSend}
+            >
+              Send
+            </button>
+          </div>
+          <div className="bg-white rounded p-4 shadow-inner">
+            {messages.map((msg, i) => (
+              <Message key={i} type={msg.type} content={msg.content} />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
 </body>
 </html>
