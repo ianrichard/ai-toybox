@@ -59,3 +59,40 @@ pre {
   padding: 1rem;
   overflow-x: auto;
 }
+
+/* Dark mode styles */
+html[data-theme='dark'] body {
+  color: #e0e0e0;
+}
+
+html[data-theme='dark'] pre {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+}
+
+html[data-theme='dark'] code {
+  background: #2d2d2d;
+  color: #e0e0e0;
+}
+
+html[data-theme='dark'] ::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+html[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+html[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* Fixed input area */
+.sticky {
+  position: sticky;
+  bottom: 0;
+  background-color: inherit;
+  z-index: 10;
+  margin-bottom: -1rem;
+  padding-bottom: 1rem;
+}

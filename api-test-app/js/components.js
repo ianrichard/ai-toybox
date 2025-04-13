@@ -57,7 +57,7 @@ function formatContent(content) {
 function Avatar({ type }) {
   if (type === 'assistant') {
     return (
-      <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
+      <div className="mt-2 w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
         <i className="fas fa-robot"></i>
       </div>
     );
@@ -65,7 +65,7 @@ function Avatar({ type }) {
   
   if (type === 'user') {
     return (
-      <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center flex-shrink-0">
+      <div className="mt-2 w-8 h-8 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center flex-shrink-0">
         <i className="fas fa-user"></i>
       </div>
     );
@@ -73,7 +73,7 @@ function Avatar({ type }) {
   
   if (type === 'tool-call') {
     return (
-      <div className="w-8 h-8 rounded-full bg-yellow-500 text-white flex items-center justify-center flex-shrink-0">
+      <div className="mt-2 w-8 h-8 rounded-full bg-yellow-500 text-white flex items-center justify-center flex-shrink-0">
         <i className="fas fa-tools"></i>
       </div>
     );
@@ -81,7 +81,7 @@ function Avatar({ type }) {
   
   if (type === 'tool-result') {
     return (
-      <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center flex-shrink-0">
+      <div className="mt-2 w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center flex-shrink-0">
         <i className="fas fa-check-circle"></i>
       </div>
     );
