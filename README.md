@@ -1,6 +1,6 @@
-# Pydantic AI MCP
+# MCP LLM API Server
 
-An AI assistant built with Pydantic AI and the Model-Call-Protocol pattern.
+An API server for LLMs using the Model-Call-Protocol pattern and Pydantic AI.
 
 ## Features
 
@@ -41,17 +41,17 @@ An AI assistant built with Pydantic AI and the Model-Call-Protocol pattern.
 
 ### Build the Docker image
 ```bash
-docker build -t pydantic-ai-app .
+docker build -t mcp-llm-api-server .
 ```
 
 ### Running API mode (default)
 ```bash
-docker run -p 8000:8000 --env-file .env pydantic-ai-app
+docker run -p 8000:8000 --env-file .env mcp-llm-api-server
 ```
 
 ### Running CLI mode (interactive)
 ```bash
-docker run -it --env-file .env pydantic-ai-app --mode cli
+docker run -it --env-file .env mcp-llm-api-server --mode cli
 ```
 
 ### Using Docker Compose
