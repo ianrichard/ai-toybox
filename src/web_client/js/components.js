@@ -105,7 +105,7 @@ function Message({ type, content, isLastMessage }) {
     'user': "bg-blue-600 text-white",
     'assistant': "bg-white text-gray-800 border border-gray-200 shadow-sm",
     'tool-call': "bg-yellow-100 border-l-4 border-yellow-500 font-mono text-sm",
-    'tool-result': "bg-green-50 border-l-4 border-green-500 font-mono text-sm",
+    'tool-result': "bg-green-50 border-l-4 border-green-500 text-green-700 font-mono text-sm",
     'error': "bg-red-50 border-l-4 border-red-500 text-red-700",
   };
   

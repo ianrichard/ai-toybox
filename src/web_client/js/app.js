@@ -4,6 +4,7 @@ function App() {
   const [buffer, setBuffer] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
   
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -14,6 +15,12 @@ function App() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
   
   const send = useWebSocket(
     'ws://localhost:8000/chat', 
@@ -158,7 +165,8 @@ function App() {
       <div className="py-4 sticky bottom-0">
         <div className="flex items-center bg-white dark:bg-gray-700 rounded-full border dark:border-gray-600 shadow-sm px-3 py-1">
           <input
-            className="flex-1 p-2 outline-none bg-transparent dark:text-white"
+            ref={inputRef}
+            className="flex-1 p-2 outline-none bg-transparent text-gray-800"
             placeholder="Type your message..."
             value={input}
             onChange={(e) => setInput(e.target.value)}

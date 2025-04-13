@@ -23,5 +23,8 @@ ENV PYTHONPATH=/app
 # Expose the API port
 EXPOSE 8000
 
-# Command to run the application
-CMD ["python", "src/main.py", "--mode", "api"]
+# Set entry point to python script
+ENTRYPOINT ["python", "src/main.py"]
+
+# Default to API mode if no arguments are provided
+CMD ["--mode", "api"]

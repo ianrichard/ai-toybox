@@ -9,80 +9,115 @@ An AI assistant built with Pydantic AI and the Model-Call-Protocol pattern.
 - Web client demonstration
 - Tool call support through MCP
 
-## Quick Start
-
-1. Copy `.env.example` to `.env` and add your API keys
-2. Install dependencies: `pip install -e .`
-3. Run the CLI: `python main.py --mode cli`
-4. Run the API: `python main.py --mode api`
-
-## Docker
-
-```bash
-docker-compose up
-```
-
 ## Prerequisites
 
 - Python 3.9+
 - A virtual environment (venv)
 
-## Installation
+## Quick Start (Local Development)
 
-1.  **Create and activate a virtual environment:**
-```
-bash
-    python3 -m venv .venv
-    source .venv/bin/activate  # On Linux/macOS
-    # or
-    .venv\Scripts\activate  # On Windows
-    
-```
-2.  **Install dependencies:**
-```
-bash
-    pip install -r requirements.txt
-    
-```
-## Running the Terminal Client
+1. Copy `.env.example` to `.env` and add your API keys
+2. Create and activate a virtual environment:
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate  # On Linux/macOS
+   # or
+   .venv\Scripts\activate  # On Windows
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Run the CLI:
+   ```bash
+   python src/main.py --mode cli
+   ```
+5. Run the API:
+   ```bash
+   python src/main.py --mode api
+   ```
 
-The `terminal_client.py` file provides a command-line interface for interacting with the agent service.  To run the client, execute the following command from the project's root directory:
-```
-bash
-python terminal_client.py
-```
-This will start the terminal client, and you can then interact with the agent by typing messages and pressing Enter. The agent's responses will be displayed in the terminal.
+## Docker
 
-## Running the API Server
+### Build the Docker image
+```bash
+docker build -t pydantic-ai-app .
+```
 
-The `api_server.py` file starts an HTTP API server that allows you to interact with the agent service through API calls.  To run the server, use the following command:
+### Running API mode (default)
+```bash
+docker run -p 8000:8000 --env-file .env pydantic-ai-app
 ```
-bash
-python api_server.py
+
+### Running CLI mode (interactive)
+```bash
+docker run -it --env-file .env pydantic-ai-app --mode cli
 ```
-The server will start and listen for requests on the default port (typically 8000).  You will see a message indicating the server is running, for example:
+
+### Using Docker Compose
+```bash
+# Start the API service
+docker-compose up
 ```
-INFO:     Started server process [12345]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+
+## Model Configuration
+
+This project uses [Pydantic AI](https://ai.pydantic.dev/) for AI model integration. You can configure which model to use by setting the `BASE_MODEL` environment variable.
+
+The format follows the Pydantic AI convention: `provider:model_name`
+
+Examples:
+- `openai:gpt-4o`
+- `anthropic:claude-3-opus-20240229`
+- `groq:llama-3.3-70b-versatile`
+
+See the complete list of supported models at: [https://ai.pydantic.dev/models/](https://ai.pydantic.dev/models/)
+
+### API Keys
+
+For each provider, you'll need to set the corresponding API key in your `.env` file:
+
+```bash
+# Example .env configuration
+BASE_MODEL=groq:llama-3.3-70b-versatile
+GROQ_API_KEY=your-groq-api-key
+OPENAI_API_KEY=your-openai-api-key
+ANTHROPIC_API_KEY=your-anthropic-api-key
 ```
+
+The API key environment variable follows the pattern: `{PROVIDER_NAME}_API_KEY`
+
+## API Documentation
+
+Once the API server is running, access the auto-generated API documentation at:
+
+- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
+- ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
 ## Making API Calls
 
-Once the API server is running, you can use tools like `curl` to make requests to it.  The primary endpoint is `/chat`, which accepts POST requests with a JSON body containing the user's message.
+The primary endpoint is `/chat`, which accepts POST requests with a JSON body containing the user's message.
 
-Here's an example `curl` command:
-```
-bash
+Example using curl:
+```bash
 curl -X POST -H "Content-Type: application/json" -d '{"message": "Hello, agent!"}' http://localhost:8000/chat
 ```
-This command sends the message "Hello, agent!" to the server. The server will respond with a JSON object containing the agent's response.  For example:
+
+For streaming responses, use the WebSocket endpoint:
 ```
-json
-{"response": "Hello there! How can I assist you today?"}
+ws://localhost:8000/ws
 ```
+
+## Web Client
+
+A demo web client is included in the `/static` directory. Access it at:
+
+```
+http://localhost:8000/
+```
+
 ## Important Notes
 
-*   Ensure that the virtual environment is activated before running either the client or the server.
-*   The API server runs on port 8000 by default.  If you need to use a different port, you may need to modify the `api_server.py` code.
-*   The terminal client and API server can be run simultaneously to provide multiple ways of interacting with the agent service.
+* Ensure that the virtual environment is activated before running either the client or the server.
+* The API server runs on port 8000 by default.
+* Both the CLI interface and API server use the same underlying agent functionality.
