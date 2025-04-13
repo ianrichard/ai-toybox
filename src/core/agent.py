@@ -13,7 +13,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger("agent_service")
+logger = logging.getLogger("core.agent")
 
 load_dotenv()  # Load environment variables from .env
 
@@ -30,7 +30,7 @@ class AgentService:
         
         self.agent = Agent(
             model_name,            
-            mcp_servers=[MCPServerStdio(sys.executable, args=["mcp_server.py"])],
+            mcp_servers=[MCPServerStdio(sys.executable, args=["src/core/mcp_server.py"])],
             system_prompt=system_prompt,
         )
         
@@ -82,13 +82,12 @@ class AgentService:
             response["error"] = str(e)
             
         return response
-
+        
     def _prepare_input_with_history(self, user_input: str, history: Optional[list]) -> str:
         """Prepare the input with context from conversation history if available."""
         if not history:
             return user_input
             
-        # Consider using a more structured approach than just dumping JSON
         return f"Previous conversation:\n{json.dumps(history, indent=2)}\n\nCurrent query: {user_input}"
     
     async def _process_agent_run(self, run, response: Dict[str, Any],
@@ -97,10 +96,10 @@ class AgentService:
                                 on_tool_result: Optional[Callable]):
         """Process the agent run and update the response dictionary."""
         async for node in run:
-            if Agent.is_model_request_node(node):
+            if self.agent.is_model_request_node(node):
                 await self._handle_model_request(node, run.ctx, response, on_assistant_message)
                     
-            elif Agent.is_call_tools_node(node):
+            elif self.agent.is_call_tools_node(node):
                 await self._handle_tool_call(node, run.ctx, response, on_tool_call, on_tool_result)
     
     async def _handle_model_request(self, node, ctx, response, on_assistant_message):

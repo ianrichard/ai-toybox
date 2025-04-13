@@ -1,6 +1,26 @@
-# Project README
+# Pydantic AI MCP
 
-This project provides a terminal client and an API server for interacting with an agent service.
+An AI assistant built with Pydantic AI and the Model-Call-Protocol pattern.
+
+## Features
+
+- Terminal interface for CLI interaction
+- API server with WebSocket streaming
+- Web client demonstration
+- Tool call support through MCP
+
+## Quick Start
+
+1. Copy `.env.example` to `.env` and add your API keys
+2. Install dependencies: `pip install -e .`
+3. Run the CLI: `python main.py --mode cli`
+4. Run the API: `python main.py --mode api`
+
+## Docker
+
+```bash
+docker-compose up
+```
 
 ## Prerequisites
 

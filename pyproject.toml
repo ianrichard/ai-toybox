@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pydantic-ai-mcp"
+version = "0.1.0"
+description = "AI assistant using Pydantic AI and MCP"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+dependencies = [
+    "fastapi>=0.95.0",
+    "uvicorn>=0.21.1",
+    "pydantic>=2.0.0",
+    "pydantic-ai>=0.1.0",
+    "python-dotenv>=1.0.0",
+    "websockets>=11.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "pytest",
+    "pytest-asyncio",
+]
+
+[project.scripts]
+pydantic-ai-mcp = "main:main"
