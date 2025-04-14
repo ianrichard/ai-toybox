@@ -28,23 +28,24 @@ function App() {
       switch (msg.type) {
         case 'assistant':
           if (!isTyping) setIsTyping(true);
-          setBuffer(prev => {
-            const updated = prev + msg.content;
-            if (prev === '') {
-              addMessage('assistant', updated);
-            } else {
-              updateAssistant(updated);
-            }
-            return updated;
-          });
-          break;
-        case 'final_response':
-          // This is the key fix - make sure we process the final response correctly
-          setBuffer('');
-          setIsTyping(false);
-          // If the final response has content, make sure we show it
-          if (msg.content && typeof msg.content === 'object' && msg.content.assistant_content) {
-            updateAssistant(msg.content.assistant_content);
+          
+          // If it's just a completion signal without content, don't update the message
+          if (msg.content || !msg.complete) {
+            setBuffer(prev => {
+              const updated = prev + (msg.content || "");
+              if (prev === '') {
+                addMessage('assistant', updated);
+              } else {
+                updateAssistant(updated);
+              }
+              return updated;
+            });
+          }
+          
+          // Check if this is the final message (complete flag)
+          if (msg.complete) {
+            setBuffer('');
+            setIsTyping(false);
           }
           break;
         case 'tool_call':

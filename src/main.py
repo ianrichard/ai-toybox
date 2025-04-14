@@ -33,7 +33,9 @@ def main():
     # Run the appropriate interface
     if args.mode == "api":
         from interfaces.api.server import run_api
-        run_api()
+        # Use the RELOAD environment variable, defaulting to True if not set
+        reload_enabled = os.environ.get('RELOAD', 'True').lower() in ('true', '1', 't')
+        run_api(reload=reload_enabled)
     else:
         from interfaces.cli.client import run_terminal_interface
         asyncio.run(run_terminal_interface())

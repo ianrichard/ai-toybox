@@ -20,6 +20,9 @@ COPY . .
 # Set Python path to include src directory
 ENV PYTHONPATH=/app
 
+# Enable reload by default for development
+ENV RELOAD=True
+
 # Expose the API port
 EXPOSE 8000
 

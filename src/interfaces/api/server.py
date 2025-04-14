@@ -106,11 +106,12 @@ async def handle_chat_message(websocket: WebSocket, service: AgentService, messa
     logger.info(f"Processing chat: '{user_input[:50]}...'")
     
     # Create closures for callbacks
-    async def send_websocket_json(msg_type, content):
+    async def send_websocket_json(msg_type, content, complete=False):
         try:
             await websocket.send_json({
                 "type": msg_type,
-                "content": content
+                "content": content,
+                "complete": complete
             })
         except Exception as e:
             logger.error(f"Failed to send {msg_type}: {e}")
@@ -142,14 +143,20 @@ async def handle_chat_message(websocket: WebSocket, service: AgentService, messa
         on_tool_result=on_tool_result
     )
     
-    # Send completion message
+    # Send completion signal with empty content
     logger.info(f"Chat completed: {len(response.get('assistant_content', ''))} chars")
-    await send_websocket_json("final_response", response)
-
-def run_api():
+    await send_websocket_json("assistant", "", complete=True)
+    
+def run_api(reload=True):  # Default to True for development
     """Run the API server."""
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    
+    if reload:
+        # Use import string format when reload is enabled
+        uvicorn.run("interfaces.api.server:app", host="0.0.0.0", port=8000, reload=True)
+    else:
+        # Use direct app reference when reload is disabled
+        uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
 
 if __name__ == "__main__":
-    run_api()
+    run_api()  # Will use reload=True by default

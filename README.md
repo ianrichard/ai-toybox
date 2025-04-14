@@ -54,6 +54,12 @@ docker run -p 8000:8000 --env-file .env mcp-llm-api-server
 docker run -it --env-file .env mcp-llm-api-server --mode cli
 ```
 
+### Docker Development with Live Reloading
+```bash
+# Run with volume mount for live code reloading during development
+docker run -p 8000:8000 --env-file .env -v $(pwd):/app mcp-llm-api-server
+```
+
 ### Using Docker Compose
 ```bash
 # Start the API service
