@@ -121,21 +121,52 @@ class AgentService:
         """Process tool call events."""
         async with node.stream(ctx) as stream:
             async for event in stream:
-                logger.debug(f"Tool event: {type(event)}")
+                logger.error(f"----------------")
+                logger.error(f"{event}")
+                logger.error(f"----------------")
+                
+                # Initialize common tool data structure
+                tool_data = {
+                    "type": "tool"
+                }
+                
                 # Handle tool call
                 if hasattr(event, 'part') and hasattr(event.part, 'tool_name'):
+                    # Extract tool call ID and name
+                    tool_data["id"] = event.call_id if hasattr(event, 'call_id') else event.tool_call_id
+                    tool_data["name"] = event.part.tool_name
+                    
                     if event.part.args and event.part.args.strip() not in ["", "{}"]:
-                        tool_call = {
-                            "tool_name": event.part.tool_name,
-                            "args": event.part.args
-                        }
-                        response["tool_calls"].append(tool_call)
+                        # Add arguments to the tool data
+                        tool_data["args"] = event.part.args
+                        
+                        # Add to response structure for returning later
+                        response["tool_calls"].append(tool_data.copy())
+                        
+                        # Call the callback if provided
                         if on_tool_call:
-                            on_tool_call(tool_call)
+                            on_tool_call(tool_data)
                 
                 # Handle tool result
                 elif hasattr(event, 'result') and hasattr(event.result, 'content'):
-                    result = event.result.content.content[0].text
-                    response["tool_results"].append(result)
+                    # Extract the result text
+                    result_text = event.result.content.content[0].text
+                    
+                    # Get tool name if available
+                    if hasattr(event.result, 'tool_name'):
+                        tool_data["name"] = event.result.tool_name
+                    else:
+                        tool_data["name"] = "unknown"
+                    
+                    # Get tool ID if available
+                    tool_data["id"] = event.tool_call_id if hasattr(event, 'tool_call_id') else "unknown_tool"
+                    
+                    # Add results to the tool data
+                    tool_data["results"] = result_text
+                    
+                    # Add to response structure for returning later
+                    response["tool_results"].append(tool_data.copy())
+                    
+                    # Call the callback if provided
                     if on_tool_result:
-                        on_tool_result(result)
+                        on_tool_result(tool_data)

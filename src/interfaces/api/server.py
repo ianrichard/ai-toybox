@@ -105,6 +105,9 @@ async def handle_chat_message(websocket: WebSocket, service: AgentService, messa
     history = message.get("history", [])
     logger.info(f"Processing chat: '{user_input[:50]}...'")
     
+    # Tool ID counter for this session
+    tool_id_counter = 0
+    
     # Create closures for callbacks
     async def send_websocket_json(msg_type, content, complete=False):
         try:
@@ -119,16 +122,17 @@ async def handle_chat_message(websocket: WebSocket, service: AgentService, messa
     # Define callbacks for websocket streaming
     def on_tool_call(tool_call):
         logger.debug(f"Tool call: {tool_call}")
-        asyncio.create_task(
-            send_websocket_json("tool_call", {
-                "tool_name": tool_call["tool_name"], 
-                "args": tool_call["args"]
-            })
-        )
+        
+        # Send the tool_call data directly - it should already be properly formatted 
+        # with type, id, name, and args
+        asyncio.create_task(websocket.send_json(tool_call))
 
     def on_tool_result(result):
-        logger.debug(f"Tool result: {result[:100]}...")
-        asyncio.create_task(send_websocket_json("tool_result", result))
+        logger.debug(f"Tool result: {str(result)[:100]}...")
+        
+        # Send the result data directly - it should already be properly formatted
+        # with type, id, name, and results
+        asyncio.create_task(websocket.send_json(result))
 
     def on_assistant_message(content):
         # Don't log each token to avoid excessive logging

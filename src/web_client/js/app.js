@@ -5,6 +5,8 @@ function App() {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  // Track active tool calls to merge them later
+  const [toolCalls, setToolCalls] = useState({});
   
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -25,10 +27,12 @@ function App() {
   const send = useWebSocket(
     'ws://localhost:8000/chat', 
     (msg) => {
+      console.log('Received message:', msg);
+      
       switch (msg.type) {
         case 'assistant':
           if (!isTyping) setIsTyping(true);
-          
+
           // If it's just a completion signal without content, don't update the message
           if (msg.content || !msg.complete) {
             setBuffer(prev => {
@@ -48,21 +52,71 @@ function App() {
             setIsTyping(false);
           }
           break;
-        case 'tool_call':
+        case 'tool':
           setIsTyping(false);
-          addMessage('tool-call', msg.content);
-          break;
-        case 'tool_result':
-          addMessage('tool-result', msg.content);
+          
+          if (msg.results !== undefined) {
+            // This is a tool result - update or merge with the existing tool call
+            setToolCalls(prev => {
+              // Remove this tool call from tracking since we're merging it
+              const updated = { ...prev };
+              delete updated[msg.id];
+              return updated;
+            });
+            
+            // Find and update the existing tool call message to include results
+            setMessages(prev => {
+              return prev.map(message => {
+                // Find matching tool call by ID
+                if (message.type === 'tool-call' && message.content.id === msg.id) {
+                  console.log("Found tool call to update:", message.content);
+                  
+                  // Create a merged content object with both args and results
+                  const mergedContent = {
+                    id: msg.id,
+                    name: msg.name,
+                    args: message.content.args, // Keep original args
+                    results: msg.results // Add new results
+                  };
+                  
+                  // Return updated message
+                  return {
+                    ...message,
+                    type: 'tool-result',
+                    content: mergedContent
+                  };
+                }
+                return message;
+              });
+            });
+          } else if (msg.args !== undefined) {
+            // This is a tool call - track it and add a message
+            const toolCall = {
+              id: msg.id,
+              name: msg.name,
+              args: msg.args
+            };
+            
+            // Track this tool call for potential merging
+            setToolCalls(prev => ({
+              ...prev,
+              [msg.id]: toolCall
+            }));
+            
+            addMessage('tool-call', toolCall);
+          }
           break;
         case 'error':
           setIsTyping(false);
           addMessage('error', msg.content);
           break;
+        case 'status':
+          // Handle status messages
+          break;
       }
     },
     (errorMessage) => {
-      // Handle error
+      console.error('WebSocket error:', errorMessage);
       setIsTyping(false);
       addMessage('error', errorMessage);
     }
@@ -81,7 +135,7 @@ function App() {
       return last;
     });
   };
-
+  
   const handleSend = () => {
     const trimmed = input.trim();
     if (!trimmed) return;
@@ -102,6 +156,7 @@ function App() {
     setMessages([]);
     setBuffer('');
     setIsTyping(false);
+    setToolCalls({});
   };
   
   const greetingMessage = "Hi there! I'm an AI assistant. How can I help you today?";
@@ -125,7 +180,7 @@ function App() {
     <div className="flex flex-col h-full p-4">
       <header className="flex justify-between items-center mb-4 pb-3 border-b dark:border-gray-700">
         <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">
-          <i className="fas fa-robot mr-2"></i>
+          <i className="fas fa-star-of-life mr-2"></i>
           AI Assistant
         </h1>
         <div className="flex items-center">
@@ -148,7 +203,7 @@ function App() {
         </div>
       </header>
       
-      <div className="flex-1 overflow-y-auto px-2 py-4 rounded-lg">
+      <div className="flex-1 overflow-y-auto py-4 rounded-lg">
         <div>
           {messages.map((msg, i) => (
             <Message 
@@ -167,7 +222,7 @@ function App() {
         <div className="flex items-center bg-white dark:bg-gray-700 rounded-full border dark:border-gray-600 shadow-sm px-3 py-1">
           <input
             ref={inputRef}
-            className="flex-1 p-2 outline-none bg-transparent text-gray-800"
+            className="flex-1 p-2 outline-none bg-transparent text-gray-800 dark:text-white"
             placeholder="Type your message..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -180,9 +235,6 @@ function App() {
           >
             <i className="fas fa-paper-plane"></i>
           </button>
-        </div>
-        <div className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
-          Press Enter to send your message
         </div>
       </div>
     </div>
