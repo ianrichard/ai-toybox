@@ -11,12 +11,6 @@ def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Pydantic AI MCP")
     parser.add_argument(
-        "--mode", 
-        choices=["api", "cli"], 
-        default="cli",
-        help="Run mode: api (server) or cli (terminal)"
-    )
-    parser.add_argument(
         "--debug", 
         action="store_true",
         help="Enable debug logging"
@@ -30,15 +24,10 @@ def main():
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
-    # Run the appropriate interface
-    if args.mode == "api":
-        from interfaces.api.server import run_api
-        # Use the RELOAD environment variable, defaulting to True if not set
-        reload_enabled = os.environ.get('RELOAD', 'True').lower() in ('true', '1', 't')
-        run_api(reload=reload_enabled)
-    else:
-        from interfaces.cli.client import run_terminal_interface
-        asyncio.run(run_terminal_interface())
+    # Always run API mode
+    from interfaces.api.server import run_api
+    reload_enabled = os.environ.get('RELOAD', 'True').lower() in ('true', '1', 't')
+    run_api(reload=reload_enabled)
         
 if __name__ == "__main__":
     main()

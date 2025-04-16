@@ -28,6 +28,3 @@ EXPOSE 8000
 
 # Set entry point to python script
 ENTRYPOINT ["python", "src/main.py"]
-
-# Default to API mode if no arguments are provided
-CMD ["--mode", "api"]
