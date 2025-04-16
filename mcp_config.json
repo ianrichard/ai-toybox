@@ -1,0 +1,28 @@
+{
+  "servers": [
+    {
+      "name": "local",
+      "transport": {
+        "command": "python",
+        "args": ["src/mcp/mcp_server.py"],
+        "env": {}
+      }
+    },
+    {
+      "name": "filesystem",
+      "transport": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "./"],
+        "env": {}
+      }
+    },
+    {
+      "name": "fetch",
+      "transport": {
+        "command": "npx",
+        "args": ["-y", "@tokenizin/mcp-npx-fetch"],
+        "env": {}
+      }
+    }
+  ]
+}
