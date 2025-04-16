@@ -1,18 +1,34 @@
+import argparse
 import asyncio
+import logging
+import os
+from dotenv import load_dotenv
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import json
-import logging
-from core.agent import AgentService
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-import os
 
-# Set up proper logging
+from chat.agent import AgentService
+
+# Load environment variables
+load_dotenv()
+
+# Parse command line arguments
+parser = argparse.ArgumentParser(description="Pydantic AI MCP")
+parser.add_argument(
+    "--debug", 
+    action="store_true",
+    help="Enable debug logging"
+)
+args = parser.parse_args()
+
+# Configure logging
+log_level = logging.DEBUG if args.debug else logging.INFO
 logging.basicConfig(
-    level=logging.INFO,
+    level=log_level,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger("api.server")
@@ -29,12 +45,12 @@ app.add_middleware(
 )
 
 # Serve static files for the web client
-app.mount("/static", StaticFiles(directory="src/web_client"), name="static")
+app.mount("/static", StaticFiles(directory="src/chat/web_client"), name="static")
 
 @app.get("/")
 async def get_home():
     """Serve the home page."""
-    return FileResponse("src/web_client/index.html")
+    return FileResponse("src/chat/web_client/index.html")
 
 class ChatRequest(BaseModel):
     """Model for chat requests."""
@@ -105,10 +121,6 @@ async def handle_chat_message(websocket: WebSocket, service: AgentService, messa
     history = message.get("history", [])
     logger.info(f"Processing chat: '{user_input[:50]}...'")
     
-    # Tool ID counter for this session
-    tool_id_counter = 0
-    
-    # Create closures for callbacks
     async def send_websocket_json(msg_type, content, complete=False):
         try:
             await websocket.send_json({
@@ -122,23 +134,15 @@ async def handle_chat_message(websocket: WebSocket, service: AgentService, messa
     # Define callbacks for websocket streaming
     def on_tool_call(tool_call):
         logger.debug(f"Tool call: {tool_call}")
-        
-        # Send the tool_call data directly - it should already be properly formatted 
-        # with type, id, name, and args
         asyncio.create_task(websocket.send_json(tool_call))
 
     def on_tool_result(result):
         logger.debug(f"Tool result: {str(result)[:100]}...")
-        
-        # Send the result data directly - it should already be properly formatted
-        # with type, id, name, and results
         asyncio.create_task(websocket.send_json(result))
 
     def on_assistant_message(content):
-        # Don't log each token to avoid excessive logging
         asyncio.create_task(send_websocket_json("assistant", content))
     
-    # Process the message and stream the response
     response = await service.process_input(
         user_input,
         history=history,
@@ -147,7 +151,6 @@ async def handle_chat_message(websocket: WebSocket, service: AgentService, messa
         on_tool_result=on_tool_result
     )
     
-    # Send completion signal with empty content
     logger.info(f"Chat completed: {len(response.get('assistant_content', ''))} chars")
     await send_websocket_json("assistant", "", complete=True)
     
@@ -156,11 +159,10 @@ def run_api(reload=True):  # Default to True for development
     import uvicorn
     
     if reload:
-        # Use import string format when reload is enabled
-        uvicorn.run("interfaces.api.server:app", host="0.0.0.0", port=8000, reload=True)
+        uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
     else:
-        # Use direct app reference when reload is disabled
         uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
 
 if __name__ == "__main__":
-    run_api()  # Will use reload=True by default
+    reload_enabled = os.environ.get('RELOAD', 'True').lower() in ('true', '1', 't')
+    run_api(reload=reload_enabled)

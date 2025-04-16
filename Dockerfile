@@ -27,4 +27,4 @@ ENV RELOAD=True
 EXPOSE 8000
 
 # Set entry point to python script
-ENTRYPOINT ["python", "src/main.py"]
+ENTRYPOINT ["python", "src/server.py"]

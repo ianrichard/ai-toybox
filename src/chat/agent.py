@@ -36,7 +36,7 @@ class AgentService:
         # Define list of MCP servers
         mcp_servers = [
             # Always include the Python MCP server
-            MCPServerStdio(sys.executable, args=["src/core/mcp_server.py"])
+            MCPServerStdio(sys.executable, args=["src/mcp/mcp_server.py"])
         ]
 
         mcp_servers.append(
