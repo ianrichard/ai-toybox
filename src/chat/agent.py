@@ -5,11 +5,17 @@ import json
 import logging
 import signal
 import atexit
+
 from dotenv import load_dotenv
 from pydantic_ai import Agent
 from pydantic_ai.mcp import MCPServerStdio
-from typing import AsyncGenerator, Optional, Dict, Any, Callable, Union
 
+# --- Azure patch: import these for Azure support ---
+from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.providers.azure import AzureProvider
+# ---
+
+from typing import AsyncGenerator, Optional, Dict, Any, Callable, Union
 # Set up proper logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -30,31 +36,41 @@ class AgentService:
         if not model_name:
             logger.error("BASE_MODEL environment variable is not set")
             raise ValueError("BASE_MODEL environment variable is required")
-
         logger.info(f"Initializing agent with model: {model_name}")
-
-        # Define list of MCP servers
         mcp_servers = [
-            # Always include the Python MCP server
             MCPServerStdio(sys.executable, args=["src/mcp/mcp_aggregate_server.py"])
         ]
 
-        # mcp_servers.append(
-        #     MCPServerStdio(
-        #         "python",
-        #         args=[
-        #             "-m",
-        #             "mcp_server_fetch"
-        #         ],
-        #     )
-        # )
+        # --- Azure patch: create agent based on prefix ---
+        if model_name.startswith("azure:"):
+            base = model_name.split(":", 1)[1]
+            azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+            azure_api_version = os.getenv("AZURE_OPENAI_API_VERSION")
+            azure_api_key = os.getenv("AZURE_OPENAI_API_KEY")
+            if not all([azure_endpoint, azure_api_version, azure_api_key]):
+                logger.error("Azure OpenAI config missing in environment variables")
+                raise RuntimeError("Azure OpenAI config missing in environment variables")
+            model = OpenAIModel(
+                base,
+                provider=AzureProvider(
+                    azure_endpoint=azure_endpoint,
+                    api_version=azure_api_version,
+                    api_key=azure_api_key,
+                ),
+            )
+            self.agent = Agent(
+                model,
+                mcp_servers=mcp_servers,
+                system_prompt=system_prompt,
+            )
+        else:
+            self.agent = Agent(
+                model_name,
+                mcp_servers=mcp_servers,
+                system_prompt=system_prompt,
+            )
+        # ---
 
-        # Initialize the agent with the available MCP servers
-        self.agent = Agent(
-            model_name,
-            mcp_servers=mcp_servers,
-            system_prompt=system_prompt,
-        )
         self._cleanup_registered = False
 
     async def __aenter__(self):
@@ -90,21 +106,17 @@ class AgentService:
             Dict containing assistant response, tool calls and results
         """
         response = {"assistant_content": "", "tool_calls": [], "tool_results": []}
-
         try:
             # Format history in a cleaner way if provided
             input_with_context = self._prepare_input_with_history(user_input, history)
             logger.info(f"Processing input: {user_input[:50]}...")
-
             async with self.agent.iter(input_with_context) as run:
                 await self._process_agent_run(
                     run, response, on_assistant_message, on_tool_call, on_tool_result
                 )
-
         except Exception as e:
             logger.exception(f"Error processing input: {e}")
             response["error"] = str(e)
-
         return response
 
     def _prepare_input_with_history(
@@ -113,7 +125,6 @@ class AgentService:
         """Prepare the input with context from conversation history if available."""
         if not history:
             return user_input
-
         return f"Previous conversation:\n{json.dumps(history, indent=2)}\n\nCurrent query: {user_input}"
 
     async def _process_agent_run(
@@ -130,7 +141,6 @@ class AgentService:
                 await self._handle_model_request(
                     node, run.ctx, response, on_assistant_message
                 )
-
             elif self.agent.is_call_tools_node(node):
                 await self._handle_tool_call(
                     node, run.ctx, response, on_tool_call, on_tool_result
@@ -148,7 +158,6 @@ class AgentService:
                         collected_content += delta
                         if on_assistant_message:
                             on_assistant_message(delta)
-
             response["assistant_content"] = collected_content
 
     async def _handle_tool_call(
@@ -160,10 +169,8 @@ class AgentService:
                 logger.error(f"----------------")
                 logger.error(f"{event}")
                 logger.error(f"----------------")
-
                 # Initialize common tool data structure
                 tool_data = {"type": "tool"}
-
                 # Handle tool call
                 if hasattr(event, "part") and hasattr(event.part, "tool_name"):
                     # Extract tool call ID and name
@@ -173,42 +180,33 @@ class AgentService:
                         else event.tool_call_id
                     )
                     tool_data["name"] = event.part.tool_name
-
                     if event.part.args and event.part.args.strip() not in ["", "{}"]:
                         # Add arguments to the tool data
                         tool_data["args"] = event.part.args
-
-                        # Add to response structure for returning later
-                        response["tool_calls"].append(tool_data.copy())
-
-                        # Call the callback if provided
-                        if on_tool_call:
-                            on_tool_call(tool_data)
-
+                    # Add to response structure for returning later
+                    response["tool_calls"].append(tool_data.copy())
+                    # Call the callback if provided
+                    if on_tool_call:
+                        on_tool_call(tool_data)
                 # Handle tool result
                 elif hasattr(event, "result") and hasattr(event.result, "content"):
                     # Extract the result text
                     result_text = event.result.content.content[0].text
-
                     # Get tool name if available
                     if hasattr(event.result, "tool_name"):
                         tool_data["name"] = event.result.tool_name
                     else:
                         tool_data["name"] = "unknown"
-
                     # Get tool ID if available
                     tool_data["id"] = (
                         event.tool_call_id
                         if hasattr(event, "tool_call_id")
                         else "unknown_tool"
                     )
-
                     # Add results to the tool data
                     tool_data["results"] = result_text
-
                     # Add to response structure for returning later
                     response["tool_results"].append(tool_data.copy())
-
                     # Call the callback if provided
                     if on_tool_result:
                         on_tool_result(tool_data)

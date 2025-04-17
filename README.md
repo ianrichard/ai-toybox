@@ -4,149 +4,84 @@ An API server for LLMs using the Model-Call-Protocol pattern and Pydantic AI.
 
 ## Features
 
-- API server with WebSocket streaming
-- Web client demonstration
-- Tool call support through MCP
+| Feature                                  | Benefit (Plain English)                             | Current State                         | Future State                                                          |
+| ---------------------------------------- | --------------------------------------------------- | ------------------------------------- | --------------------------------------------------------------------- |
+| Chat Web UI                              | Simple chat interface, easy to use                  | Basic React UI, minimal styling       | More robust, polished UI, possibly with reusable web components       |
+| Streaming responses                      | See answers as they come in—faster feedback         | Implemented                           | May be improved for responsiveness and more formats                   |
+| Custom MCP server with placeholder tools | Extensible backend, can add your own tools          | Has sample tools, minimally organized | Dedicated examples/templates in their own directory and setup helpers |
+| Tool calls through MCP                   | Integrate outside resources (APIs, code, data)      | Static tools                          | Dynamic tool loading, prompt and resource management                  |
+| MCP inspector                            | Debug and inspect what’s happening “under the hood” | Functional, but occasionally unstable | Improved stability, works reliably with aggregate servers             |
+| MCP config JSON                          | Easily tweak system settings in one file            | Supports basic use cases              | Thoroughly tested, supports more advanced configs                     |
+| Any model provider via PydanticAI        | Use any AI model you want, seamlessly swap models   | Supported, just swap configs          | Ongoing, with community models and docs                               |
+| Docker integration                       | Fast setup, “works on my machine” everywhere        | MVP version, may have bugs            | Refined, stable, easier for all environments                          |
 
 ## Prerequisites
 
-- Docker and Docker Compose
+- Docker
 
 ## Quick Start
 
-1. Copy `.env.example` to `.env` and add your API keys.
+1. **Clone the repo**
+   ```bash
+   git clone https://github.com/ianrichard/mcp-llm-api-server.git
+   cd mcp-llm-api-server
+   ```
+2. **Copy example environment file**
+   ```bash
+   cp .env.example .env
+   ```
+3. **Change .env to your provider and model**
 
-2. **Start the API server:**
+- You only need the API key for the provider.
+- This project follows [PydanticAI's provider:model syntax](https://ai.pydantic.dev/models/).
+- [Groq](https://groq.com/) is a quick and simple solution to try things out. (No affiliation, just think it's good)
+
+4. **Start the API server:**
    ```bash
    docker-compose up --build
    ```
+5. The API server will be available at [http://localhost:8000](http://localhost:8000).
 
-3. The API server will be available at [http://localhost:8000](http://localhost:8000).
+### Azure OpenAI Configuration
 
-## Model Configuration
-
-Set the `BASE_MODEL` and API keys in your `.env` file:
-
-```env
-BASE_MODEL=groq:llama-3.3-70b-versatile
-GROQ_API_KEY=your-groq-api-key
-OPENAI_API_KEY=your-openai-api-key
-ANTHROPIC_API_KEY=your-anthropic-api-key
-```
+To use Azure OpenAI as a provider, fill out the additional fields provided in the example `.env.example`
 
 ## API Documentation
 
-Once running, access:
-
-- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
-- ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
-
-## Making API Calls
-
-Example using curl:
-```bash
-curl -X POST -H "Content-Type: application/json" -d '{"message": "Hello, agent!"}' http://localhost:8000/chat
-```
-
-WebSocket endpoint:
-```
-ws://localhost:8000/ws
-```
+The chat web server API is available through the Swagger UI at [http://localhost:8000/docs](http://localhost:8000/docs).
 
 ## Web Client
 
-A demo web client is included in the `/static` directory. Access it at:
+A demo web client is included in the `/chat` directory and is served at:
 
-```
-http://localhost:8000/
-```
+    http://localhost:8000/
 
----
-
-*The API server runs on port 8000 by default.*
+It uses web sockets and streaming.
 
 ## MCP Inspector
-
-The MCP Inspector is available for development and debugging at:
-
-**http://localhost:6274/**
-
-After running:
-
-```sh
-docker-compose up --build
-```
 
 You can open [http://localhost:6274/](http://localhost:6274/) in your browser to inspect and interact with the MCP server.
 
 - The inspector connects to your Python MCP server running in the same Docker environment.
 - Useful for debugging, testing, and visualizing MCP tool calls and responses.
 
----
-
-## MCP Server Modes: Standalone vs Aggregate
-
-You can run this project in two ways:
-
 ### 1. Standalone MCP Server
 
-A standalone MCP server exposes only its own tools/resources.  
-Example: `src/mcp/mcp_server.py`
+A standalone MCP server exposes only its own tools/resources.
 
-**Run it directly:**
 ```bash
 python src/mcp/mcp_server.py
 ```
-or
-```bash
-fastmcp run src/mcp/mcp_server.py
-```
-
----
 
 ### 2. Aggregate MCP Server
 
-An aggregate MCP server combines multiple MCP servers (local or subprocesses) under one endpoint, namespaced by prefix.  
-Configuration is managed in `mcp_config.json`.
+An aggregate MCP server combines multiple MCP servers (local or subprocesses) under one endpoint, namespaced by prefix.
+Configuration is managed in [mcp_config.json](./mcp_config.json), following [the Anthropic convention](https://modelcontextprotocol.io/quickstart/user#mac-os-linux).
 
-**Example `mcp_config.json`:**
-```json
-{
-  "servers": [
-    {
-      "name": "local",
-      "transport": {
-        "command": "python",
-        "args": ["src/mcp/mcp_server.py"],
-        "env": {}
-      }
-    },
-    {
-      "name": "filesystem",
-      "transport": {
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-filesystem", "./"],
-        "env": {}
-      }
-    }
-  ]
-}
-```
-
-**Run the aggregate server:**
 ```bash
-python src/mcp/mcp_aggregate_server.py mcp_config.json
-```
-or
-```bash
-fastmcp run src/mcp/mcp_aggregate_server.py mcp_config.json
+python src/mcp/mcp_aggregate_server.py
 ```
 
----
+The base [agent.py](./src/chat/agent.py) runs a script that uses this aggregate for its tooling.
 
-**When to use which?**
-
-- Use **standalone** for simple, single-tool servers or development.
-- Use **aggregate** to combine multiple MCP servers (local and/or subprocesses) into a single endpoint for production or unified toolsets.
-
-You can add or remove subprocess servers by editing `mcp_config.json`—no code changes needed!
+There are currently issues running the aggregate server in the web UI and the app at the same time. The FastMCP API is relatively new and exception handling around missing tools is not quite there, so for now just using `mcp_server.py` is good enough due to the fact that that's what you'd be working on anyway vs testing industry libraries.

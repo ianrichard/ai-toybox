@@ -7,13 +7,13 @@ function App() {
   const inputRef = useRef(null);
   // Track active tool calls to merge them later
   const [toolCalls, setToolCalls] = useState({});
-  
+
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
-  
+
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
@@ -23,12 +23,12 @@ function App() {
       inputRef.current.focus();
     }
   }, []);
-  
+
   const send = useWebSocket(
-    'ws://localhost:8000/chat', 
+    'ws://localhost:8000/chat',
     (msg) => {
       console.log('Received message:', msg);
-      
+
       switch (msg.type) {
         case 'assistant':
           if (!isTyping) setIsTyping(true);
@@ -45,7 +45,7 @@ function App() {
               return updated;
             });
           }
-          
+
           // Check if this is the final message (complete flag)
           if (msg.complete) {
             setBuffer('');
@@ -54,7 +54,7 @@ function App() {
           break;
         case 'tool':
           setIsTyping(false);
-          
+
           if (msg.results !== undefined) {
             // This is a tool result - update or merge with the existing tool call
             setToolCalls(prev => {
@@ -63,14 +63,14 @@ function App() {
               delete updated[msg.id];
               return updated;
             });
-            
+
             // Find and update the existing tool call message to include results
             setMessages(prev => {
               return prev.map(message => {
                 // Find matching tool call by ID
                 if (message.type === 'tool-call' && message.content.id === msg.id) {
                   console.log("Found tool call to update:", message.content);
-                  
+
                   // Create a merged content object with both args and results
                   const mergedContent = {
                     id: msg.id,
@@ -78,7 +78,7 @@ function App() {
                     args: message.content.args, // Keep original args
                     results: msg.results // Add new results
                   };
-                  
+
                   // Return updated message
                   return {
                     ...message,
@@ -96,13 +96,13 @@ function App() {
               name: msg.name,
               args: msg.args
             };
-            
+
             // Track this tool call for potential merging
             setToolCalls(prev => ({
               ...prev,
               [msg.id]: toolCall
             }));
-            
+
             addMessage('tool-call', toolCall);
           }
           break;
@@ -135,7 +135,7 @@ function App() {
       return last;
     });
   };
-  
+
   const handleSend = () => {
     const trimmed = input.trim();
     if (!trimmed) return;
@@ -151,16 +151,16 @@ function App() {
     send({ type: 'chat', content: trimmed, history });
     setInput('');
   };
-  
+
   const clearChat = () => {
     setMessages([]);
     setBuffer('');
     setIsTyping(false);
     setToolCalls({});
   };
-  
+
   const greetingMessage = "Hi there! I'm an AI assistant. How can I help you today?";
-  
+
   useEffect(() => {
     if (messages.length === 0) {
       addMessage('assistant', greetingMessage);
@@ -171,7 +171,7 @@ function App() {
   const [darkMode, setDarkMode] = useState(
     document.documentElement.getAttribute('data-theme') === 'dark'
   );
-  
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
@@ -184,16 +184,15 @@ function App() {
           AI Assistant
         </h1>
         <div className="flex items-center">
-          {/* Dark mode toggle button */}
-          <button 
+          {/* <button
             onClick={() => setDarkMode(!darkMode)}
             className="text-gray-500 hover:text-yellow-500 dark:hover:text-yellow-300 p-1 rounded mr-2"
             title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
           >
             <i className={`fas ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
-          </button>
-          
-          <button 
+          </button> */}
+
+          <button
             onClick={clearChat}
             className="text-gray-500 hover:text-red-500 dark:hover:text-red-400 p-1 rounded"
             title="Clear chat"
@@ -202,22 +201,22 @@ function App() {
           </button>
         </div>
       </header>
-      
+
       <div className="flex-1 overflow-y-auto py-4 rounded-lg">
         <div>
           {messages.map((msg, i) => (
-            <Message 
-              key={i} 
-              type={msg.type} 
+            <Message
+              key={i}
+              type={msg.type}
               content={msg.content}
-              isLastMessage={i === messages.length - 1} 
+              isLastMessage={i === messages.length - 1}
             />
           ))}
           {isTyping && <TypingIndicator />}
           <div ref={messagesEndRef} />
         </div>
       </div>
-      
+
       <div className="py-4 sticky bottom-0">
         <div className="flex items-center bg-white dark:bg-gray-700 rounded-full border dark:border-gray-600 shadow-sm px-3 py-1">
           <input

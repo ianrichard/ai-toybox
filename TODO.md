@@ -1,7 +1,0 @@
-- Expandable, consolidated tool call
-- Other MCP servers to agent class
-    - Memory
-    - Web search
-- Break out UI into components
-- User profile
-- Web components
