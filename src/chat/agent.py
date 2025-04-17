@@ -36,18 +36,18 @@ class AgentService:
         # Define list of MCP servers
         mcp_servers = [
             # Always include the Python MCP server
-            MCPServerStdio(sys.executable, args=["src/mcp/mcp_server.py"])
+            MCPServerStdio(sys.executable, args=["src/mcp/mcp_aggregate_server.py"])
         ]
 
-        mcp_servers.append(
-            MCPServerStdio(
-                "python",
-                args=[
-                    "-m",
-                    "mcp_server_fetch"
-                ],
-            )
-        )
+        # mcp_servers.append(
+        #     MCPServerStdio(
+        #         "python",
+        #         args=[
+        #             "-m",
+        #             "mcp_server_fetch"
+        #         ],
+        #     )
+        # )
 
         # Initialize the agent with the available MCP servers
         self.agent = Agent(

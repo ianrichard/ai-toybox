@@ -83,3 +83,70 @@ You can open [http://localhost:6274/](http://localhost:6274/) in your browser to
 - Useful for debugging, testing, and visualizing MCP tool calls and responses.
 
 ---
+
+## MCP Server Modes: Standalone vs Aggregate
+
+You can run this project in two ways:
+
+### 1. Standalone MCP Server
+
+A standalone MCP server exposes only its own tools/resources.  
+Example: `src/mcp/mcp_server.py`
+
+**Run it directly:**
+```bash
+python src/mcp/mcp_server.py
+```
+or
+```bash
+fastmcp run src/mcp/mcp_server.py
+```
+
+---
+
+### 2. Aggregate MCP Server
+
+An aggregate MCP server combines multiple MCP servers (local or subprocesses) under one endpoint, namespaced by prefix.  
+Configuration is managed in `mcp_config.json`.
+
+**Example `mcp_config.json`:**
+```json
+{
+  "servers": [
+    {
+      "name": "local",
+      "transport": {
+        "command": "python",
+        "args": ["src/mcp/mcp_server.py"],
+        "env": {}
+      }
+    },
+    {
+      "name": "filesystem",
+      "transport": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "./"],
+        "env": {}
+      }
+    }
+  ]
+}
+```
+
+**Run the aggregate server:**
+```bash
+python src/mcp/mcp_aggregate_server.py mcp_config.json
+```
+or
+```bash
+fastmcp run src/mcp/mcp_aggregate_server.py mcp_config.json
+```
+
+---
+
+**When to use which?**
+
+- Use **standalone** for simple, single-tool servers or development.
+- Use **aggregate** to combine multiple MCP servers (local and/or subprocesses) into a single endpoint for production or unified toolsets.
+
+You can add or remove subprocess servers by editing `mcp_config.json`—no code changes needed!

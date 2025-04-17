@@ -1,10 +1,12 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and Node.js (for npx subprocesses)
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc && \
+    apt-get install -y --no-install-recommends gcc curl && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -18,7 +20,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Set Python path to include src directory
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app/src
 
 # Enable reload by default for development
 ENV RELOAD=True
@@ -26,5 +28,5 @@ ENV RELOAD=True
 # Expose the API port
 EXPOSE 8000
 
-# Set entry point to python script
+# Set entry point to python script (adjust as needed)
 ENTRYPOINT ["python", "src/server.py"]
