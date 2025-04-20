@@ -1,9 +1,9 @@
 import asyncio
-import os
+import atexit
 import json
 import logging
+import os
 import signal
-import atexit
 
 from dotenv import load_dotenv
 from pydantic_ai import Agent
@@ -11,23 +11,14 @@ from pydantic_ai.mcp import MCPServerStdio
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.azure import AzureProvider
 
-logging.basicConfig(
-    level=logging.ERROR, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+from src.server.utils.mcp_config import load_mcp_config
+from src.server.utils.logging import setup_logging
+
+setup_logging()
 logger = logging.getLogger("core.agent")
 
-load_dotenv()
 
-def load_mcp_config():
-    config_path = os.environ.get("MCP_CONFIG_PATH", "/app/mcp_config.json")
-    try:
-        with open(config_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            if isinstance(data, dict) and "servers" in data:
-                return data["servers"]
-    except Exception as e:
-        logger.error(f"Could not load MCP config from {config_path}: {e}")
-    return []
+load_dotenv()
 
 MCP_CONFIG = load_mcp_config()
 

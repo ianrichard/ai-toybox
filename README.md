@@ -1,87 +1,68 @@
-# MCP LLM API Server
+# AI Agent Starter with PydanticAI and MCP
 
-An API server for LLMs using the Model-Call-Protocol pattern and Pydantic AI.
+A base project using PydanticAI’s Agent API. Connects to any LLM provider (such as OpenAI, Groq, Azure OpenAI, etc.) and supports multiple MCP servers using a simple JSON config at the root of the project. Includes a minimal demo client to show tool calls and results.
 
 ## Features
 
-| Feature                                  | Benefit (Plain English)                             | Current State                         | Future State                                                          |
-| ---------------------------------------- | --------------------------------------------------- | ------------------------------------- | --------------------------------------------------------------------- |
-| Chat Web UI                              | Simple chat interface, easy to use                  | Basic React UI, minimal styling       | More robust, polished UI, possibly with reusable web components       |
-| Streaming responses                      | See answers as they come in—faster feedback         | Implemented                           | May be improved for responsiveness and more formats                   |
-| Custom MCP server with placeholder tools | Extensible backend, can add your own tools          | Has sample tools, minimally organized | Dedicated examples/templates in their own directory and setup helpers |
-| Tool calls through MCP                   | Integrate outside resources (APIs, code, data)      | Static tools                          | Dynamic tool loading, prompt and resource management                  |
-| MCP inspector                            | Debug and inspect what’s happening “under the hood” | Functional, but occasionally unstable | Improved stability, works reliably with aggregate servers             |
-| MCP config JSON                          | Easily tweak system settings in one file            | Supports basic use cases              | Thoroughly tested, supports more advanced configs                     |
-| Any model provider via PydanticAI        | Use any AI model you want, seamlessly swap models   | Supported, just swap configs          | Ongoing, with community models and docs                               |
-| Docker integration                       | Fast setup, “works on my machine” everywhere        | MVP version, may have bugs            | Refined, stable, easier for all environments                          |
+- **Multi-provider support:** Use any LLM provider with PydanticAI via `provider:model` syntax
+  (e.g. `openai:gpt-4o`, `groq:llama-3.3-70b-versatile`)
+- **Multiple MCP servers:** Connect to several MCP servers, configured via `mcp_config.json`
+  (modeled after the [Claude Desktop convention](https://modelcontextprotocol.io/quickstart/user))
+- **Demo client included:** See basic tool call and agent response handling in action
 
 ## Prerequisites
 
-- Docker
+- [Docker](https://www.docker.com/)
 
-## Quick Start
+## Quickstart
 
-1. **Clone the repo**
-   ```bash
-   git clone https://github.com/ianrichard/mcp-llm-api-server.git
-   cd mcp-llm-api-server
-   ```
-2. **Copy example environment file**
-   ```bash
-   cp .env.example .env
-   ```
-3. **Change .env to your provider and model**
+1. **Clone the repo:**
+    ```bash
+    git clone https://github.com/ianrichard/mcp-llm-api-server.git
+    cd mcp-llm-api-server
+    ```
+1. **Copy example environment file**
+    ```bash
+    cp .env.example .env
+    ```
+1. **Edit `.env` with your provider and API key(s)**
+    - Only the provider API key is needed for most providers.
+    - See `.env.example` for the required fields for each provider.
+    - This project uses [PydanticAI's provider:model syntax](https://ai.pydantic.dev/models/).
+    - [Groq](https://groq.com/) is a simple provider to start with (no affiliation).
+1. **[Optional] Set up multiple MCP servers**
+    - Add/edit entries in `mcp_config.json` at the root.
+      Follow the structure in the [MCP protocol quickstart](https://modelcontextprotocol.io/quickstart/user).
+1. **Start the API server:**
+    ```bash
+    docker-compose up --build
+    ```
 
-- You only need the API key for the provider.
-- This project follows [PydanticAI's provider:model syntax](https://ai.pydantic.dev/models/).
-- [Groq](https://groq.com/) is a quick and simple solution to try things out. (No affiliation, just think it's good)
+Once running, visit [http://localhost:8000](http://localhost:8000/) in your browser.
 
-4. **Start the API server:**
-   ```bash
-   docker-compose up --build
-   ```
-5. The API server will be available at [http://localhost:8000](http://localhost:8000).
+---
 
 ### Azure OpenAI Configuration
 
-To use Azure OpenAI as a provider, fill out the additional fields provided in the example `.env.example`
+To use Azure OpenAI instead of regular OpenAI:
+- Fill out the additional Azure fields in your `.env` (see `.env.example`).
+- Make sure to specify your Azure endpoint, API key, and deployment/model names as described in the [PydanticAI docs](https://ai.pydantic.dev/models/).
 
-## API Documentation
+---
 
-The chat web server API is available through the Swagger UI at [http://localhost:8000/docs](http://localhost:8000/docs).
+## Using 3rd-Party or Custom MCP Servers
 
-## Web Client
+If you want to test 3rd-party or custom MCP servers, you can use the [MCP Inspector](https://github.com/modelcontextprotocol/inspector).
+Simply run it like this in your terminal:
 
-A demo web client is included in the `/chat` directory and is served at:
+`npx @modelcontextprotocol/inspector -- uvx mcp-server-fetch`
 
-    http://localhost:8000/
+**How it works:**
+- The text after the `--` (for example, `uvx mcp-server-fetch`) is *not* part of the Inspector, but is the actual code or server command passed to it.
+- That code is what gets executed when you hit "Connect" in the Inspector UI.
+- You can use any server module or command—just change what's after the `--`.
 
-It uses web sockets and streaming.
-
-## MCP Inspector
-
-You can open [http://localhost:6274/](http://localhost:6274/) in your browser to inspect and interact with the MCP server.
-
-- The inspector connects to your Python MCP server running in the same Docker environment.
-- Useful for debugging, testing, and visualizing MCP tool calls and responses.
-
-### 1. Standalone MCP Server
-
-A standalone MCP server exposes only its own tools/resources.
-
-```bash
-python src/mcp/mcp_server.py
-```
-
-### 2. Aggregate MCP Server
-
-An aggregate MCP server combines multiple MCP servers (local or subprocesses) under one endpoint, namespaced by prefix.
-Configuration is managed in [mcp_config.json](./mcp_config.json), following [the Anthropic convention](https://modelcontextprotocol.io/quickstart/user#mac-os-linux).
-
-```bash
-python src/mcp/mcp_aggregate_server.py
-```
-
-The base [agent.py](./src/chat/agent.py) runs a script that uses this aggregate for its tooling.
-
-There are currently issues running the aggregate server in the web UI and the app at the same time. The FastMCP API is relatively new and exception handling around missing tools is not quite there, so for now just using `mcp_server.py` is good enough due to the fact that that's what you'd be working on anyway vs testing industry libraries.
+**Pay attention to your environment:**
+- Whatever you put after `--` is executed in the shell where you ran `npx @modelcontextprotocol/inspector`.
+- That means the required runtime (node, python, etc.) and any dependencies must be available there.
+- If you reference a custom or 3rd-party server in your `mcp_config.json`, make sure your local machine or Docker container (depending on where you run this project) has all the interpreters, runtimes, and environment set up appropriately.

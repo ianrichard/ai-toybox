@@ -2,15 +2,13 @@ import os
 import logging
 import asyncio
 from dotenv import load_dotenv
-
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import json
-
-from src.chat.agent import AgentService
+from src.server.agent import AgentService
 
 load_dotenv()
 
@@ -22,34 +20,26 @@ logging.basicConfig(
 logger = logging.getLogger("api.server")
 
 app = FastAPI(title="Pydantic AI API")
-
-# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Serve static files for the web client
-app.mount("/static", StaticFiles(directory="src/chat/web_client"), name="static")
+app.mount("/static", StaticFiles(directory="src/client"), name="static")
 
 @app.get("/")
 async def get_home():
-    """Serve the home page."""
-    return FileResponse("src/chat/web_client/index.html")
+    return FileResponse("src/client/index.html")
 
 class ChatRequest(BaseModel):
-    """Model for chat requests."""
     message: str
     history: list = []
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
-    """Process a chat message via REST API."""
     logger.info(f"Received chat request: {request.message[:50]}...")
-
     try:
         async with AgentService() as service:
             response = await service.process_input(
@@ -66,33 +56,26 @@ async def chat(request: ChatRequest):
 
 @app.websocket("/chat")
 async def websocket_chat(websocket: WebSocket):
-    """Stream chat responses through WebSocket."""
     await websocket.accept()
     logger.info("WebSocket connection accepted")
-
     try:
         async with AgentService() as service:
             await websocket.send_json({"type": "status", "content": "MCP Ready"})
             logger.info("MCP Ready message sent")
-
             while True:
-                # Receive message from client
                 data = await websocket.receive_text()
                 logger.debug(f"Received message: {data}")
-
                 try:
                     message = json.loads(data)
                 except json.JSONDecodeError:
                     logger.error(f"Failed to parse JSON: {data}")
                     await websocket.send_json({"type": "error", "content": "Invalid JSON"})
                     continue
-
                 if message.get("type") == "chat":
                     await handle_chat_message(websocket, service, message)
                 else:
                     logger.warning(f"Unknown message type: {message.get('type')}")
                     await websocket.send_json({"type": "error", "content": "Unknown message type"})
-
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected")
     except Exception as e:
@@ -102,9 +85,7 @@ async def websocket_chat(websocket: WebSocket):
         except:
             logger.error("Failed to send error message, connection might be closed")
 
-
 async def handle_chat_message(websocket: WebSocket, service: AgentService, message: dict):
-    """Handle a chat message from the client."""
     user_input = message.get("content", "")
     history = message.get("history", [])
     logger.info(f"Processing chat: '{user_input[:50]}...'")
@@ -119,7 +100,6 @@ async def handle_chat_message(websocket: WebSocket, service: AgentService, messa
         except Exception as e:
             logger.error(f"Failed to send {msg_type}: {e}")
 
-    # Define callbacks for websocket streaming
     def on_tool_call(tool_call):
         logger.debug(f"Tool call: {tool_call}")
         asyncio.create_task(websocket.send_json(tool_call))
@@ -142,12 +122,10 @@ async def handle_chat_message(websocket: WebSocket, service: AgentService, messa
     logger.info(f"Chat completed: {len(response.get('assistant_content', ''))} chars")
     await send_websocket_json("assistant", "", complete=True)
 
-def run_api(reload=True):  # Default to True for development
-    """Run the API server."""
+def run_api(reload=True):
     import uvicorn
-
     if reload:
-        uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
+        uvicorn.run("src.server.server:app", host="0.0.0.0", port=8000, reload=True)
     else:
         uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
 
