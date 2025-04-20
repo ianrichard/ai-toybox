@@ -1,5 +1,7 @@
 FROM python:3.13-slim
 
+ENV PATH="/usr/local/bin:${PATH}"
+
 WORKDIR /app
 
 RUN apt-get update && \
@@ -9,10 +11,11 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+RUN pip install --no-cache-dir uv
 
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml uv.lock* ./
+
+RUN uv sync
 
 COPY ./src ./src
-
 COPY mcp_config.json ./src/mcp_config.json
