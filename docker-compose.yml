@@ -1,36 +1,14 @@
 version: '3.8'
-
 services:
-  fastmcp-server:
+  fast-api-server:
     build:
       context: .
       dockerfile: Dockerfile
+    env_file:
+      - .env
     ports:
       - "8000:8000"
-    environment:
-      - PYTHONPATH=/app/src
     volumes:
-      - .:/app
-    networks:
-      - mcp-network
-
-  mcp-inspector:
-    build:
-      context: .
-      dockerfile: Dockerfile.inspector
-    command: npx @modelcontextprotocol/inspector -- python src/mcp/mcp_server.py
-    ports:
-      - "6274:6274"
-      - "6277:6277"
-    environment:
-      - PORT=6274
-      - HOST=0.0.0.0
-      - PYTHONPATH=/app/src
-    volumes:
-      - .:/app
-    networks:
-      - mcp-network
-
-networks:
-  mcp-network:
-    driver: bridge
+      - ./src:/app/src
+      - ./mcp_config.json:/app/mcp_config.json
+    command: uvicorn src.server:app --host 0.0.0.0 --port 8000 --reload

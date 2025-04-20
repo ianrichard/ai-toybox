@@ -1,7 +1,6 @@
-import argparse
-import asyncio
-import logging
 import os
+import logging
+import asyncio
 from dotenv import load_dotenv
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
@@ -11,22 +10,11 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import json
 
-from chat.agent import AgentService
+from src.chat.agent import AgentService
 
-# Load environment variables
 load_dotenv()
 
-# Parse command line arguments
-parser = argparse.ArgumentParser(description="Pydantic AI MCP")
-parser.add_argument(
-    "--debug", 
-    action="store_true",
-    help="Enable debug logging"
-)
-args = parser.parse_args()
-
-# Configure logging
-log_level = logging.DEBUG if args.debug else logging.INFO
+log_level = logging.DEBUG if os.environ.get("DEBUG", "0") in ["1", "true", "True"] else logging.INFO
 logging.basicConfig(
     level=log_level,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -61,7 +49,7 @@ class ChatRequest(BaseModel):
 async def chat(request: ChatRequest):
     """Process a chat message via REST API."""
     logger.info(f"Received chat request: {request.message[:50]}...")
-    
+
     try:
         async with AgentService() as service:
             response = await service.process_input(
@@ -81,30 +69,30 @@ async def websocket_chat(websocket: WebSocket):
     """Stream chat responses through WebSocket."""
     await websocket.accept()
     logger.info("WebSocket connection accepted")
-    
+
     try:
         async with AgentService() as service:
             await websocket.send_json({"type": "status", "content": "MCP Ready"})
             logger.info("MCP Ready message sent")
-            
+
             while True:
                 # Receive message from client
                 data = await websocket.receive_text()
                 logger.debug(f"Received message: {data}")
-                
+
                 try:
                     message = json.loads(data)
                 except json.JSONDecodeError:
                     logger.error(f"Failed to parse JSON: {data}")
                     await websocket.send_json({"type": "error", "content": "Invalid JSON"})
                     continue
-                
+
                 if message.get("type") == "chat":
                     await handle_chat_message(websocket, service, message)
                 else:
                     logger.warning(f"Unknown message type: {message.get('type')}")
                     await websocket.send_json({"type": "error", "content": "Unknown message type"})
-                    
+
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected")
     except Exception as e:
@@ -120,7 +108,7 @@ async def handle_chat_message(websocket: WebSocket, service: AgentService, messa
     user_input = message.get("content", "")
     history = message.get("history", [])
     logger.info(f"Processing chat: '{user_input[:50]}...'")
-    
+
     async def send_websocket_json(msg_type, content, complete=False):
         try:
             await websocket.send_json({
@@ -130,7 +118,7 @@ async def handle_chat_message(websocket: WebSocket, service: AgentService, messa
             })
         except Exception as e:
             logger.error(f"Failed to send {msg_type}: {e}")
-    
+
     # Define callbacks for websocket streaming
     def on_tool_call(tool_call):
         logger.debug(f"Tool call: {tool_call}")
@@ -142,7 +130,7 @@ async def handle_chat_message(websocket: WebSocket, service: AgentService, messa
 
     def on_assistant_message(content):
         asyncio.create_task(send_websocket_json("assistant", content))
-    
+
     response = await service.process_input(
         user_input,
         history=history,
@@ -150,14 +138,14 @@ async def handle_chat_message(websocket: WebSocket, service: AgentService, messa
         on_tool_call=on_tool_call,
         on_tool_result=on_tool_result
     )
-    
+
     logger.info(f"Chat completed: {len(response.get('assistant_content', ''))} chars")
     await send_websocket_json("assistant", "", complete=True)
-    
+
 def run_api(reload=True):  # Default to True for development
     """Run the API server."""
     import uvicorn
-    
+
     if reload:
         uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
     else:

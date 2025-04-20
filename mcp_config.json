@@ -1,14 +1,6 @@
 {
   "servers": [
     {
-      "name": "local",
-      "transport": {
-        "command": "python",
-        "args": ["src/mcp/mcp_server.py"],
-        "env": {}
-      }
-    },
-    {
       "name": "filesystem",
       "transport": {
         "command": "npx",
