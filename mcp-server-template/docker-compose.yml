@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/app/src
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./README.md:/app/README.md
+    command: bash -c "uv pip install -e . && python -m mcp_server_math --verbose"
+    environment:
+      - MCP_LOG_LEVEL=DEBUG
+      - "6277:6277"
