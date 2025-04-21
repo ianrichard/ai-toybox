@@ -5,7 +5,7 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 import mcp.types as types
 import custom_mcp_server.tools
-from custom_mcp_server.tools.registry import TOOL_FUNCS, TOOL_DESCRIPTIONS, TOOL_SCHEMAS
+from custom_mcp_server.tools_registry import TOOL_FUNCS, TOOL_DESCRIPTIONS, TOOL_SCHEMAS
 
 logger = logging.getLogger(__name__)
 

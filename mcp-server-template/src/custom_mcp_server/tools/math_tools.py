@@ -1,4 +1,4 @@
-from .registry import tool
+from custom_mcp_server.tools_registry import tool
 
 @tool
 def add(a: float, b: float) -> float:
