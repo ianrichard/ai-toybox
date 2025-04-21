@@ -1,5 +1,5 @@
 [project]
-name = "mcp-server-math"
+name = "custom-mcp-server"
 version = "0.1.0"
 description = "A simple MCP server for basic math operations."
 readme = "README.md"
@@ -16,4 +16,4 @@ build-backend = "hatchling.build"
 dev-dependencies = ["pyright>=1.1.389"]
 
 [project.scripts]
-mcp-server-math = "mcp_server_math:main"
+custom-mcp-server = "custom_mcp_server:main"

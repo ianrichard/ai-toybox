@@ -6,7 +6,7 @@ from .server import serve
 @click.command()
 @click.option("-v", "--verbose", count=True)
 def main(verbose: int) -> None:
-    """MCP Math Server - MVP"""
+    """Custom MCP Server Template"""
     import asyncio
 
     logging_level = logging.WARN

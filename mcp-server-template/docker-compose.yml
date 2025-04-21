@@ -8,7 +8,7 @@ services:
       - ./src:/app/src
       - ./pyproject.toml:/app/pyproject.toml
       - ./README.md:/app/README.md
-    command: bash -c "uv pip install -e . && python -m mcp_server_math --verbose"
+    command: bash -c "uv pip install -e . && python -m custom_mcp_server --verbose"
     environment:
       - MCP_LOG_LEVEL=DEBUG
       - "6277:6277"

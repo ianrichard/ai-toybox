@@ -21,7 +21,7 @@ This template demonstrates how to structure and implement an MCP server in Pytho
 2. **Run the server with MCP Inspector:**
 
    ```bash
-   npx @modelcontextprotocol/inspector python -m mcp_server_math --verbose
+   npx @modelcontextprotocol/inspector python -m custom_mcp_server --verbose
    ```
 
    - This will launch the server using your local code, with live code reload (edit and rerun, no rebuild needed)
@@ -31,22 +31,22 @@ This template demonstrates how to structure and implement an MCP server in Pytho
 ### Run from Docker Build
 
 This scenario is for running your MCP server as a standalone, production-like container.
-When you build the image, it is registered in your local Docker image registry under the name you specify (here, `mcp-server-math`).
+When you build the image, it is registered in your local Docker image registry under the name you specify (here, `custom-mcp-server`).
 You can then run this image from any project or terminal on your machine.
 
 1. **Build the Docker image:**
 
    ```bash
-   docker build -t mcp-server-math .
+   docker build -t custom-mcp-server .
    ```
 
-   - This command packages your code and its dependencies into a Docker image named `mcp-server-math`.
+   - This command packages your code and its dependencies into a Docker image named `custom-mcp-server`.
    - The image is stored locally and can be referenced by name.
 
 2. **Run the server with MCP Inspector via Docker:**
 
    ```bash
-   npx @modelcontextprotocol/inspector docker run -i --rm mcp-server-math
+   npx @modelcontextprotocol/inspector docker run -i --rm custom-mcp-server
    ```
 
    - This starts the server in a container and connects it to the Inspector UI
@@ -64,7 +64,7 @@ You can then run this image from any project or terminal on your machine.
 - In another terminal, connect Inspector to the running container:
 
   ```bash
-  npx @modelcontextprotocol/inspector docker exec -i <container_name> python -m mcp_server_math --verbose
+  npx @modelcontextprotocol/inspector docker exec -i <container_name> python -m custom_mcp_server --verbose
   ```
 
   (Replace <container_name> with your actual container name.)
@@ -74,7 +74,7 @@ Hot reloading in Docker dev mode may have connection issues or require server re
 For the smoothest development experience, running the server directly with Python on your host is recommended:
 
     ```bash
-    npx @modelcontextprotocol/inspector python -m mcp_server_math --verbose
+    npx @modelcontextprotocol/inspector python -m custom_mcp_server --verbose
     ```
 
 ## Tool System

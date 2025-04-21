@@ -15,4 +15,4 @@ RUN uv venv && \
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-CMD ["python", "-m", "mcp_server_math", "--verbose"]
+CMD ["python", "-m", "custom_mcp_server", "--verbose"]
