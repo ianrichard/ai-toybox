@@ -1,0 +1,18 @@
+{
+   "name": "lit-shoelace-starter",
+   "private": true,
+   "version": "0.0.0",
+   "type": "module",
+   "scripts": {
+      "dev": "vite",
+      "build": "vite build",
+      "start": "npm run build && serve ./dist",
+      "format": "prettier --write ."
+   },
+   "devDependencies": {
+      "lit": "^3.3.0",
+      "prettier": "^3.5.3",
+      "serve": "^14.2.4",
+      "vite": "^6.3.3"
+   }
+}

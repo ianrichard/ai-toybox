@@ -1,0 +1,32 @@
+*,
+*::before,
+*::after {
+   box-sizing: border-box;
+   margin: 0;
+   padding: 0;
+}
+
+/* :host { display: block; } */
+
+body {
+   font-family: var(--sl-font-sans);
+   font-size: var(--sl-font-size-medium);
+   line-height: 1.5;
+   color: var(--sl-color-neutral-900);
+   background-color: var(--sl-color-neutral-0);
+   padding: var(--sl-spacing-large);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+   font-weight: 600;
+   margin-bottom: var(--sl-spacing-medium);
+}
+
+p {
+   margin-bottom: var(--sl-spacing-medium);
+}

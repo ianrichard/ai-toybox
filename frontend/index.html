@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Components</title>
+
+      <!-- Shoelace base theme + autoloader -->
+      <link
+         rel="stylesheet"
+         href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css"
+      />
+      <script
+         type="module"
+         src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js"
+      ></script>
+      <link rel="stylesheet" href="/src/styles/global.css" />
+      <script src="https://cdn.tailwindcss.com"></script>
+   </head>
+
+   <body>
+      <div class="container mx-auto max-w-lg">
+         <h1 class="text-3xl font-bold mb-6">Components</h1>
+
+         <ui-weather-widget location="San Antonio"></ui-weather-widget>
+
+         <ui-video-player
+            poster="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=600&q=80"
+            src="https://www.w3schools.com/html/movie.mp4"
+         ></ui-video-player>
+
+         <ui-card>
+            <ui-component-name></ui-component-name>
+         </ui-card>
+
+         <ui-card>
+            <ui-send-email></ui-send-email>
+         </ui-card>
+
+         <ui-card>
+            <ui-send-email
+               recipient="test@example.com"
+               message="Hello from attribute!"
+            ></ui-send-email>
+         </ui-card>
+
+         <ui-alert></ui-alert>
+      </div>
+
+      <!-- Dev Mode Components -->
+      <script type="module" src="/src/main.js"></script>
+   </body>
+</html>
