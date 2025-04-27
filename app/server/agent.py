@@ -11,8 +11,8 @@ from pydantic_ai.mcp import MCPServerStdio
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.azure import AzureProvider
 
-from src.server.utils.mcp_config import load_mcp_config
-from src.server.utils.logging import setup_logging
+from server.utils.mcp_config import load_mcp_config
+from server.utils.logging import setup_logging
 
 setup_logging()
 logger = logging.getLogger("core.agent")

@@ -1,49 +1,26 @@
-# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 dist/
 build/
 *.egg-info/
-
-# Virtual environments
 venv/
 env/
 .env
 .venv/
 ENV/
-
-# IDE specific files
 .idea/
 .vscode/
 *.swp
 *.swo
-
-# Jupyter Notebook
 .ipynb_checkpoints
-
-# pytest
 .pytest_cache/
 .coverage
 htmlcov/
-
-# mypy
 .mypy_cache/
-
-# logs
 *.log
-
-# Local development settings
 .local
 instance/
-
-# Mac OS specific
 .DS_Store
-
-# Windows specific
 Thumbs.db

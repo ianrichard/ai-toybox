@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import json
-from src.server.agent import AgentService
+from server.agent import AgentService
 
 load_dotenv()
 
@@ -27,11 +27,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.mount("/static", StaticFiles(directory="src/client"), name="static")
+app.mount("/static", StaticFiles(directory="client"), name="static")
 
 @app.get("/")
 async def get_home():
-    return FileResponse("src/client/index.html")
+    return FileResponse("client/index.html")
 
 class ChatRequest(BaseModel):
     message: str
@@ -125,7 +125,7 @@ async def handle_chat_message(websocket: WebSocket, service: AgentService, messa
 def run_api(reload=True):
     import uvicorn
     if reload:
-        uvicorn.run("src.server.server:app", host="0.0.0.0", port=8000, reload=True)
+        uvicorn.run("server.server:app", host="0.0.0.0", port=8000, reload=True)
     else:
         uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
 

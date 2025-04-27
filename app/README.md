@@ -44,7 +44,7 @@ Once running, visit [http://localhost:8000](http://localhost:8000/) in your brow
 1. Install dependencies
    `uv sync`
 1. Start the server
-   `uv run -- uvicorn src.server.server:app --host 0.0.0.0 --port 8000`
+   `uv run -- uvicorn server.server:app --host 0.0.0.0 --port 8000`
 
 ---
 

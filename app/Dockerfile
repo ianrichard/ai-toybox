@@ -17,5 +17,6 @@ COPY pyproject.toml uv.lock* ./
 
 RUN uv sync
 
-COPY ./src ./src
-COPY mcp_config.json ./src/mcp_config.json
+COPY ./client ./client
+COPY ./server ./server
+COPY mcp_config.json ./mcp_config.json
