@@ -1,3 +1,1 @@
-
-@import "tailwindcss";
-@import "@shoelace-style/shoelace/dist/themes/light.css";
+@import '@mantine/core/styles.css';
