@@ -4,23 +4,16 @@
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>Components</title>
-
-      <!-- Shoelace base theme + autoloader -->
-      <link
-         rel="stylesheet"
-         href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css"
-      />
-      <script
-         type="module"
-         src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js"
-      ></script>
       <link rel="stylesheet" href="/src/styles/global.css" />
-      <script src="https://cdn.tailwindcss.com"></script>
    </head>
 
    <body>
       <div class="container mx-auto max-w-lg">
          <h1 class="text-3xl font-bold mb-6">Components</h1>
+
+         <!-- WebSocket Test UI -->
+         <button id="ws-btn" class="mb-4 px-4 py-2 bg-green-600 text-white rounded">Test WebSocket</button>
+         <div id="ws-result" class="mb-6 text-blue-700 font-mono"></div>
 
          <ui-weather-widget location="San Antonio"></ui-weather-widget>
 
@@ -49,5 +42,33 @@
 
       <!-- Dev Mode Components -->
       <script type="module" src="/src/main.js"></script>
+      <script type="module">
+         const wsBtn = document.getElementById('ws-btn');
+         const wsResult = document.getElementById('ws-result');
+         let ws;
+
+         wsBtn.addEventListener('click', () => {
+            wsResult.textContent = 'Connecting...';
+            ws = new WebSocket('ws://localhost:8000/chat');
+
+            ws.onopen = () => {
+               wsResult.textContent = 'WebSocket connected. Sending hello...';
+               ws.send('hello from frontend');
+            };
+
+            ws.onmessage = (event) => {
+               wsResult.textContent = 'Received: ' + event.data;
+               ws.close();
+            };
+
+            ws.onerror = (err) => {
+               wsResult.textContent = 'WebSocket error: ' + err.message;
+            };
+
+            ws.onclose = () => {
+               // Optionally handle close
+            };
+         });
+      </script>
    </body>
 </html>

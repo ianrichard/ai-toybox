@@ -14,5 +14,10 @@
       "prettier": "^3.5.3",
       "serve": "^14.2.4",
       "vite": "^6.3.3"
+   },
+   "dependencies": {
+      "@shoelace-style/shoelace": "^2.20.1",
+      "@tailwindcss/vite": "^4.1.4",
+      "tailwindcss": "^4.1.4"
    }
 }

@@ -1,5 +1,4 @@
 import { LitElement, html } from 'lit';
-import { discover } from 'https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js';
 
 export class BaseElement extends LitElement {
    static useShadow = false;
@@ -7,11 +6,6 @@ export class BaseElement extends LitElement {
 
    createRenderRoot() {
       return this.constructor.useShadow ? super.createRenderRoot() : this;
-   }
-
-   firstUpdated() {
-      super.firstUpdated?.();
-      discover(this.shadowRoot ?? this);
    }
 
    render() {
